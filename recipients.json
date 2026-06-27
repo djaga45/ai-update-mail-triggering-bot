@@ -1,0 +1,33 @@
+import logging
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from zoneinfo import ZoneInfo
+from agent.config import EVENING_HOUR, IST, MORNING_HOUR
+from agent.email_sender import send_digest
+from agent.news_fetcher import fetch_latest_ai_news
+from agent.recipients import recipients_for_slot
+
+logger = logging.getLogger(__name__)
+_scheduler = None
+
+def run_slot(slot, force=False):
+    items = fetch_latest_ai_news()
+    recipients = recipients_for_slot(slot)
+    sent = send_digest(recipients, items, slot, force=force)
+    return {"slot": slot, "sent_count": len(sent), "sent_to": sent, "headline_count": len(items)}
+
+def _job(slot):
+    try:
+        r = run_slot(slot)
+        logger.info("Sent %s digest to %s", slot, r["sent_count"])
+    except Exception:
+        logger.exception("Failed %s digest", slot)
+
+def start_scheduler():
+    global _scheduler
+    if _scheduler and _scheduler.running: return _scheduler
+    tz = ZoneInfo(IST)
+    s = BackgroundScheduler(timezone=tz)
+    s.add_job(_job, CronTrigger(hour=MORNING_HOUR, minute=0, timezone=tz), args=["morning"], id="morning", replace_existing=True, misfire_grace_time=3600)
+    s.add_job(_job, CronTrigger(hour=EVENING_HOUR, minute=0, timezone=tz), args=["evening"], id="evening", replace_existing=True, misfire_grace_time=3600)
+    s.start(); _scheduler = s; return s

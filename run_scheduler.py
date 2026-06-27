@@ -1,0 +1,7 @@
+streamlit>=1.32.0
+apscheduler>=3.10.4
+feedparser>=6.0.11
+python-dotenv>=1.0.1
+pytz>=2024.1
+requests>=2.31.0
+pydantic-settings>=2.2.1

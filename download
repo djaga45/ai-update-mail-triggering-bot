@@ -1,0 +1,10 @@
+# Gmail SMTP (use an App Password if 2FA is enabled)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=your-email@gmail.com
+FROM_NAME=AI News Brief
+
+# Optional: test without sending real mail
+DRY_RUN=false
